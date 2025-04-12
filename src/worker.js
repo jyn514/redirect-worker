@@ -16,7 +16,10 @@ let done = [];
 class MetaElementHandler {
   element(e) {
     let redirect, dst;
+    console.log(e);
+    console.log(e.attributes);
     for (let [name, value] of e.attributes) {
+      console.log(name, value)
       if (name === "http-equiv" && value === "refresh") redirect = true;
       if (name === "content") dst = value.split(";url=")[1];
     }
