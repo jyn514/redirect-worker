@@ -16,10 +16,7 @@ let done = [];
 class MetaElementHandler {
   element(e) {
     let redirect, dst;
-    console.log(e);
-    console.log(e.attributes);
     for (let [name, value] of e.attributes) {
-      console.log(name, value)
       if (name === "http-equiv" && value === "refresh") redirect = true;
       if (name === "content") dst = value.split(";url=")[1];
     }
@@ -32,19 +29,24 @@ export default {
   // The fetch handler is invoked when this worker receives a HTTP(S) request
   // and should return a Response (optionally wrapped in a Promise)
   async fetch(req) {
-    const res = await fetch("https://jyn.dev/talks/bootstrapping/");
-    // const res = await fetch("https://jyn.dev");
+    let origin = new Url(req.url);
+    origin.host = 'localhost:1111';
+    // origin.host = 'jyn.dev';
+    // let res = await fetch("https://jyn.dev/");
+    // console.log(origin);
+    // let res = await fetch(origin);
+    // let res = await fetch(req);
     let rewritten = new HTMLRewriter()
       .on("meta", new MetaElementHandler())
       .transform(res.clone());
-    console.log('rewrite')
     // Access the response body to force the HTMLRewriter to be evaluated.
     done.push(rewritten.text().then(_ => null));
-    // let dst = await Promise.any(done);
+    let dst = await Promise.any(done);
     if (dst !== null) {
-      return Response.redirect(dst);
-    } else {
-      return res;
+      res = new Response("", { status: 302, headers: {
+        Location: dst,
+      }});
     }
+    return res;
   }
 };
