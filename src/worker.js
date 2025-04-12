@@ -32,6 +32,13 @@ export default {
     origin.protocol = 'https:';
     let transformer = new MetaElementHandler();
     let res = await fetch(origin);
+
+    // only process HTML responses
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('text/html')) {
+      return res;
+    }
+
     let rewritten = new HTMLRewriter()
       .on("meta", transformer)
       .transform(res.clone());
@@ -39,8 +46,9 @@ export default {
     // TODO: find a way to abort early when we finish parsing <head>
     await rewritten.text();
     if (transformer.redirect !== null) {
-      return new Response("", { status: 302, headers: {
+      return new Response(null, { status: 302, headers: {
         Location: transformer.redirect,
+        'X-Redirect-Source': 'redirect-worker',
       }});
     }
     return res;
