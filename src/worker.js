@@ -12,12 +12,12 @@ class MetaElementHandler {
     this.redirect = null;
   }
   element(e) {
-    let redirect, dst;
-    for (let [name, value] of e.attributes) {
-      if (name === "http-equiv" && value === "refresh") redirect = true;
-      if (name === "content") dst = decode(value.split(/;\s*url=/)[1]);
+    if (e.getAttribute('http-equiv')?.toLowerCase() !== 'refresh') {
+      return;
     }
-    if (redirect && dst) this.redirect = dst;
+    let value = e.getAttribute('content');
+    const match = value.match(/^\s*\d+\s*;\s*url\s*=\s*"?(.+)"?\s*$/i);
+    if (match && match[1]) this.redirect = decode(match[1].trim());
   }
 }
 
